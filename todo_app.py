@@ -1,4 +1,5 @@
 import os
+import re
 from dotenv import load_dotenv
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
@@ -97,46 +98,67 @@ def delete_task(task_id, user_uid):
 # Authentication Functions
 # ---------------------------
 
-def login():
-    email = input("Email: ")
-    password = getpass("Password: ")
+def is_valid_email(email):
+    # Simple regex for email validation
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(pattern, email) is not None
 
-    try:
-        user = auth.get_user_by_email(email)
-        print(f"Logged in as {user.email}")
-        return user.uid
-    except auth.UserNotFoundError:
-        print("User does not exist.")
-        return None
+def login():
+    while True:
+        email = input("Email: ")
+        if not is_valid_email(email):
+            print("Invalid email format. Please enter a valid email (example@domain.com).")
+            continue
+
+        password = getpass("Password: ")
+
+        try:
+            user = auth.get_user_by_email(email)
+            # Firebase Admin cannot verify password
+            print(f"Logged in as {user.email}")
+            return user.uid
+        except auth.UserNotFoundError:
+            print("User does not exist.")
+            return None  # Don't ask retry here, let authenticate handle it
 
 def register():
-    email = input("Email: ")
-    password = getpass("Password: ")
+    while True:
+        email = input("Email: ")
+        if not is_valid_email(email):
+            print("Invalid email format. Please enter a valid email (example@domain.com).")
+            continue
 
-    try:
-        user = auth.create_user(
-            email=email,
-            password=password
-        )
-        print("Account created successfully!")
-        return user.uid
-    except auth.EmailAlreadyExistsError:
-        print("Email already registered. Please log in.")
-        return None
+        password = getpass("Password: ")
+
+        try:
+            user = auth.create_user(email=email, password=password)
+            print("Account created successfully!")
+            return user.uid
+        except auth.EmailAlreadyExistsError:
+            print("Email already registered. Please log in instead.")
+            return None  # Don't ask retry here, let authenticate handle it
 
 def authenticate():
-    print("\n1. Login")
-    print("2. Register")
+    while True:
+        print("\n1. Login")
+        print("2. Register")
+        choice = input("Select an option: ")
 
-    choice = input("Select an option: ")
+        if choice == "1":
+            uid = login()
+        elif choice == "2":
+            uid = register()
+        else:
+            print("Invalid selection.")
+            uid = None
 
-    if choice == "1":
-        return login()
-    elif choice == "2":
-        return register()
-    else:
-        print("Invalid selection.")
-        return None
+        if uid:
+            return uid  # Successfully logged in or registered
+
+        # Only one retry prompt for everything
+        retry = input("Do you want to try again or switch option? (yes/no): ").lower()
+        if retry != "yes":
+            return None
 
 # ---------------------------
 # Main Program
