@@ -128,16 +128,26 @@ def register():
             print("Invalid email format. Please enter a valid email (example@domain.com).")
             continue
 
-        password = getpass("Password: ")
+        password = getpass("Password (min 6 characters): ")
+        if len(password) < 6:
+            print("Password too short. Must be at least 6 characters.")
+            continue
 
         try:
-            user = auth.create_user(email=email, password=password)
+            user = auth.create_user(
+                email=email,
+                password=password
+            )
             print("Account created successfully!")
             return user.uid
         except auth.EmailAlreadyExistsError:
-            print("Email already registered. Please log in instead.")
-            return None  # Don't ask retry here, let authenticate handle it
-
+            print("Email already registered. Please log in.")
+            retry = input("Do you want to log in instead? (yes/no): ").lower()
+            if retry == "yes":
+                return login()
+            else:
+                return None
+            
 def authenticate():
     while True:
         print("\n1. Login")

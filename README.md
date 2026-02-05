@@ -8,7 +8,7 @@ To use the program, the user runs the Python application, authenticates with an 
 
 The purpose of writing this software was to gain hands-on experience with cloud databases, authentication, and CRUD operations, while following good practices such as environment-based configuration and modular code design.
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](https://youtu.be/3y4WUdPaoZ4)
 
 ---
 
